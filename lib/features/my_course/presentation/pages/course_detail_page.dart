@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:kursol/features/my_course/presentation/pages/video_player_page.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../data/repositories/dummy_course_details.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconly/iconly.dart';
+import 'package:kursol/core/common/constants/colors/app_colors.dart';
+import 'package:kursol/core/utils/textstyles/urbanist_textstyles.dart';
+import 'package:kursol/core/utils/responsiveness/app_responsive.dart';
+import 'package:kursol/features/my_course/presentation/widgets/lesson_list_widget.dart';
+import '../../data/repositories/dummy_course_details.dart';
+import '../../data/models/course_model.dart';
+import '../../data/repositories/dummy_courses.dart';
 
 class CourseDetailPage extends StatelessWidget {
   final String courseId;
@@ -13,176 +18,87 @@ class CourseDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+
     final courseDetail = dummyCourseDetails.firstWhere((course) => course.id == courseId);
+    final course = completedCourses.firstWhere(
+          (course) => course.id == courseId,
+      orElse: () => CourseModel(id: '', title: '', duration: '', imageUrl: '', progress: 0),
+    );
 
     return Scaffold(
-      backgroundColor: isDarkMode ? AppColors.dark1 : Colors.white,
+      backgroundColor: isDarkMode ? AppColors.background.dark : Colors.white,
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: Text(
           courseDetail.title,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
+          style: UrbanistTextStyles().bold(
+            color: isDarkMode ? Colors.white : AppColors.black,
+            fontSize: appH(22),
           ),
         ),
-        backgroundColor: theme.appBarTheme.backgroundColor,
+        backgroundColor: isDarkMode ? AppColors.background.dark : Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Image.asset(
-            'assets/icons/arrow_back.png',
-            width: 28,
-            height: 28,
-            color: theme.iconTheme.color,
+          icon: Icon(
+            IconlyLight.arrow_left,
+            size: appH(28),
+            color: isDarkMode ? Colors.white : Colors.black,
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: Image.asset(
-              'assets/icons/more.png',
-              width: 28,
-              height: 28,
-              color: theme.iconTheme.color,
-            ),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ListView(
-          children: courseDetail.sections.map((section) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 18),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      section.title,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: AppColors.gray500,
-                      ),
-                    ),
-                    Text(
-                      section.duration,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Column(
-                  children: section.lessons.map((lesson) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: isDarkMode ? AppColors.dark2 : Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: [
-                          if (!isDarkMode)
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                        ],
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.primary.withOpacity(0.2),
-                          radius: 24,
-                          child: Text(
-                            lesson.id,
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              fontFamily: 'Urbanist',
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          lesson.title,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                            color: isDarkMode ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        subtitle: Text(
-                          lesson.duration,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        trailing: GestureDetector(
-                          onTap: () {
-                            if (!lesson.isLocked) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => VideoPlayerPage(
-                                    videoUrl: "https://videos.pexels.com/video-files/7140928/7140928-uhd_2560_1440_24fps.mp4",
-                                    title: lesson.title,
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                          child: Image.asset(
-                            lesson.isLocked ? 'assets/icons/lock.png' : 'assets/icons/play.png',
-                            width: 48,
-                            height: 48,
-                            color: lesson.isLocked ? AppColors.gray500 : AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            );
-          }).toList(),
+        padding: EdgeInsets.symmetric(horizontal: appW(16)),
+        child: SingleChildScrollView(
+          child: LessonListWidget(
+            sections: courseDetail.sections,
+            isDarkMode: isDarkMode,
+          ),
         ),
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.all(appH(18)),
         decoration: BoxDecoration(
-          color: isDarkMode ? AppColors.dark2 : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          color: isDarkMode ? AppColors.background.dark : Colors.white,
+          border: Border.all(
+            color: isDarkMode ? AppColors.greyScale.grey700 : AppColors.greyScale.grey300,
+            width: 0.4,
+          ),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 12,
-              offset: const Offset(0, -3),
-            ),
+            if (!isDarkMode)
+              BoxShadow(
+                // ignore: deprecated_member_use
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: appH(12),
+                offset: Offset(0, -appH(3)),
+              ),
           ],
         ),
+
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            backgroundColor: AppColors.primary.blue500,
+            padding: EdgeInsets.symmetric(vertical: appH(16)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(appH(30))),
           ),
           onPressed: () {
-            context.push('/video-player', extra: {
-              'videoUrl': 'https://www.pexels.com/video/close-up-of-a-cpu-7140928/',
-              'title': courseDetail.title,
-            });
+            if (course.progress == 100) {
+
+              context.push('/completed-courses');
+            } else {
+
+              context.push('/video-player', extra: {
+                'videoUrl': 'https://www.pexels.com/video/close-up-of-a-cpu-7140928/',
+                'title': courseDetail.title,
+              });
+            }
           },
-          child: const Text(
-            "Continue Course",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          child: Text(
+            course.progress == 100 ? "View Completed Course" : "Continue Course",
+            style: UrbanistTextStyles().semiBold(
               color: Colors.white,
+              fontSize: appH(16),
             ),
           ),
         ),

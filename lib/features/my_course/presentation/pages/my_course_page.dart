@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:kursol/core/common/widgets/courses_card_wg.dart';
+
+import '../../../../core/common/constants/constants_export.dart';
+import '../../../../core/common/widgets/widgets_export.dart';
+import '../../../../core/utils/utils_export.dart';
 import '../../data/repositories/dummy_courses.dart';
-import '../widgets/course_card.dart';
-import '../widgets/tab_bar_widget.dart';
-import '../widgets/app_bar_widget.dart';
-import '../widgets/bottom_nav_bar_widget.dart';
 
 class MyCoursePage extends StatefulWidget {
   const MyCoursePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _MyCoursePageState createState() => _MyCoursePageState();
+  State<MyCoursePage> createState() => _MyCoursePageState();
 }
 
-class _MyCoursePageState extends State<MyCoursePage> with SingleTickerProviderStateMixin {
+class _MyCoursePageState extends State<MyCoursePage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _selectedIndex = 1; // Default: "My Course"
 
   @override
   void initState() {
@@ -24,22 +24,19 @@ class _MyCoursePageState extends State<MyCoursePage> with SingleTickerProviderSt
     _tabController = TabController(length: 2, vsync: this);
   }
 
-  void _onNavBarTap(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
-      backgroundColor: isDarkMode ? AppColors.darkCardBackground : AppColors.lightCardBackground,
-      appBar: CustomAppBar(),
+      appBar: DefaultAppBarWg(
+        titleText: AppStrings.myCourses,
+        onMorePressed: () {},
+      ),
       body: Column(
         children: [
-          CourseTabBar(tabController: _tabController),
+          CustomTabBar(
+            tabController: _tabController,
+            tabTitles: [AppStrings.ongoing, AppStrings.completed],
+          ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -50,10 +47,6 @@ class _MyCoursePageState extends State<MyCoursePage> with SingleTickerProviderSt
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _selectedIndex,
-        onTap: _onNavBarTap,
       ),
     );
   }
@@ -73,7 +66,26 @@ class CourseListView extends StatelessWidget {
       itemCount: courses.length,
       itemBuilder: (context, index) {
         final course = courses[index];
-        return CourseCard(course: course);
+
+        return CourseCard(
+          onTap: () {
+            if (isCompleted) {
+              context.push('/completed-course/${course.id}');
+            } else {
+              context.push('/course-detail/${course.id}');
+            }
+          },
+          courseImg: course.imageUrl,
+          courseTitle: course.title,
+          subWidget: Text(
+            course.duration,
+            style: AppTextStyles.urbanist.medium(
+              color: AppColors.greyScale.grey700,
+              fontSize: 14,
+            ),
+          ),
+          courseDuration: '40 / 114',
+        );
       },
     );
   }
